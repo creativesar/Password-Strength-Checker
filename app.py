@@ -2,6 +2,11 @@ import streamlit as st
 import re
 import math
 import time
+from datetime import datetime
+
+# Initialize theme state
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'light'
 
 # Page configuration
 st.set_page_config(
@@ -11,152 +16,127 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Ultra Modern CSS
+# Theme Switcher
+theme = st.sidebar.selectbox(
+    "Choose Theme",
+    ["Light", "Dark"],
+    key="theme_choice",
+    on_change=lambda: setattr(st.session_state, 'theme', st.session_state.theme_choice.lower())
+)
+
+# Enhanced CSS with theme support
 st.markdown("""
 <style>
+    /* Base Theme */
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+    
+    :root[data-theme="light"] {
+        --bg-color: linear-gradient(135deg, #f6f8fd 0%, #f1f4f9 100%);
+        --text-color: #333;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --hover-shadow: rgba(0, 0, 0, 0.15);
+    }
+    
+    :root[data-theme="dark"] {
+        --bg-color: linear-gradient(135deg, #1a1c1e 0%, #2d3436 100%);
+        --text-color: #fff;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --hover-shadow: rgba(0, 0, 0, 0.3);
+    }
     
     html, body, [class*="css"] {
         font-family: 'Space Grotesk', sans-serif;
-        background: linear-gradient(135deg, #f6f8fd 0%, #f1f4f9 100%);
+        color: var(--text-color);
+        background: var(--bg-color);
+        transition: all 0.3s ease;
     }
     
+    /* Input Styling */
     .stTextInput > div > div > input {
         font-size: 20px;
         padding: 20px;
         border-radius: 20px;
+        background: var(--card-bg);
+        color: var(--text-color);
         border: 2px solid rgba(46, 134, 193, 0.1);
-        background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(10px);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
     
-    .stTextInput > div > div > input:focus {
-        border-color: #2E86C1;
-        box-shadow: 0 0 25px rgba(46, 134, 193, 0.2);
-        transform: translateY(-2px);
+    /* Cards and Containers */
+    .glass-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border-radius: 25px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
     
+    .glass-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px var(--hover-shadow);
+    }
+    
+    /* Animations */
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+    
+    .floating {
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    /* Progress Bar */
+    .stProgress > div > div > div > div {
+        height: 12px;
+        border-radius: 10px;
+        background: linear-gradient(90deg, 
+            rgba(46, 134, 193, 0.2), 
+            rgba(46, 134, 193, 0.1)
+        );
+    }
+    
+    /* Alerts */
+    .stAlert {
+        border-radius: 20px;
+        border: none;
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Requirements List */
     .requirement-item {
         padding: 12px 20px;
         margin: 8px 0;
         border-radius: 15px;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .requirement-item:hover {
-        transform: translateX(5px);
+        transition: all 0.3s ease;
     }
     
     .requirement-item.met {
-        color: #10B981;
         background: rgba(16, 185, 129, 0.1);
         border-left: 4px solid #10B981;
     }
     
     .requirement-item.unmet {
-        color: #EF4444;
         background: rgba(239, 68, 68, 0.1);
         border-left: 4px solid #EF4444;
     }
     
-    .strength-meter {
-        padding: 30px;
-        border-radius: 25px;
-        margin: 25px 0;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Theme-specific styles */
+    [data-theme="dark"] .stTextInput > div > div > input {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
     }
     
-    .strength-meter:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    [data-theme="dark"] .glass-card {
+        background: rgba(255, 255, 255, 0.05);
     }
     
-    .analysis-card {
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-        padding: 30px;
-        border-radius: 25px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        margin-bottom: 25px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .analysis-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-    }
-    
-    .stProgress > div > div > div > div {
-        height: 15px;
-        border-radius: 15px;
-        background: linear-gradient(90deg, rgba(46, 134, 193, 0.2), rgba(46, 134, 193, 0.1));
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    
-    .stProgress {
-        backdrop-filter: blur(10px);
-    }
-    
-    .stAlert {
-        border-radius: 20px;
-        border: none;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        backdrop-filter: blur(10px);
-    }
-    
-    .main {
-        background: linear-gradient(135deg, #f6f8fd 0%, #f1f4f9 100%);
-    }
-    
-    .css-1y4p8pa {
-        padding: 3rem 5rem;
-    }
-    
-    .metric-container {
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px;
-        border-radius: 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        margin: 15px 0;
-        transition: all 0.4s ease;
-    }
-    
-    .metric-container:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    .password-requirements {
-        background: rgba(255, 255, 255, 0.9);
-        padding: 20px;
-        border-radius: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-    }
-    
-    .requirement-list {
-        list-style-type: none;
-        padding: 0;
-    }
-    
-    .requirement-list li {
-        padding: 8px 0;
-        color: #666;
-        transition: all 0.3s ease;
-    }
-    
-    .requirement-list li:hover {
-        color: #2E86C1;
-        transform: translateX(5px);
+    [data-theme="dark"] .requirement-item {
+        background: rgba(255, 255, 255, 0.05);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -221,24 +201,23 @@ def analyze_password(password):
     
     return score, feedback, requirements, entropy
 
-# Modern Header with 3D effect
-st.markdown("""
-    <div style='text-align: center; padding: 3rem 0;'>
+# Modern Header with theme support
+st.markdown(f"""
+    <div data-theme="{st.session_state.theme}" class="glass-card floating" style='text-align: center; margin-bottom: 2rem;'>
         <h1 style='
             font-size: 3.5em;
             font-weight: 700;
-            margin-bottom: 0.5rem;
             background: linear-gradient(120deg, #2E86C1, #3498DB, #21618C);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         '>🔐 Password Security Vault</h1>
-        <p style='
-            font-size: 1.4em;
-            color: #666;
-            margin-top: 1rem;
-            font-weight: 400;
-        '>Next-Generation Password Strength Analysis</p>
+        <p style='font-size: 1.4em; margin-top: 1rem;'>
+            Next-Generation Password Strength Analysis
+        </p>
+        <div style='margin-top: 1rem; font-size: 1.1em;'>
+            🕒 {datetime.now().strftime("%I:%M %p")}
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -332,19 +311,22 @@ if 'password' in st.session_state:
             if entropy < 50:
                 st.info("💡 Pro Tip: Create an unbreakable password by combining unique characters")
 
-# Modern footer with gradient
+# Update the footer
 st.markdown("---")
-st.markdown("""
-    <div style='text-align: center; padding: 1.5rem;'>
+st.markdown(f"""
+    <div data-theme="{st.session_state.theme}" class="glass-card" style='text-align: center;'>
         <p style='
-            color: #666;
             font-size: 1.1em;
             background: linear-gradient(120deg, #2E86C1, #3498DB);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 500;
+            margin: 0;
         '>
             Crafted with 🛡️ for next-level security
         </p>
+        <div style='margin-top: 10px; font-size: 0.9em;'>
+            {datetime.now().strftime("%B %d, %Y")}
+        </div>
     </div>
 """, unsafe_allow_html=True)
