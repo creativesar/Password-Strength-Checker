@@ -1,127 +1,162 @@
 import streamlit as st
 import re
 import math
+import time
 
 # Page configuration
 st.set_page_config(
-    page_title="Quantum Password Analyzer",
+    page_title="Next-Gen Password Analyzer",
     page_icon="🔐",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Modern Cyberpunk CSS with Real-Time Feedback
+# Ultra Modern CSS
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Roboto Mono', monospace;
-        background: linear-gradient(135deg, #0F2027, #203A43, #2C5364);
-        color: #E0E0E0;
+        font-family: 'Space Grotesk', sans-serif;
+        background: linear-gradient(135deg, #f6f8fd 0%, #f1f4f9 100%);
     }
     
     .stTextInput > div > div > input {
-        font-size: 1.2rem;
-        padding: 1rem;
-        border-radius: 25px;
-        border: 2px solid #00D4FF;
-        background: rgba(15, 32, 39, 0.9);
-        color: #00D4FF;
-        transition: all 0.4s ease;
-        box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        font-size: 20px;
+        padding: 20px;
+        border-radius: 20px;
+        border: 2px solid rgba(46, 134, 193, 0.1);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
     
     .stTextInput > div > div > input:focus {
-        border-color: #FF00FF;
-        box-shadow: 0 0 25px rgba(255, 0, 255, 0.5);
-        transform: scale(1.02);
-    }
-    
-    .cyber-container {
-        background: rgba(15, 32, 39, 0.85);
-        border-radius: 25px;
-        padding: 2rem;
-        box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
-        border: 1px solid rgba(0, 212, 255, 0.3);
-        animation: pulse 2s infinite;
-    }
-    
-    .strength-feedback {
-        text-align: center;
-        font-size: 1.5rem;
-        margin-top: 1rem;
-        font-family: 'Orbitron', sans-serif;
-        text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
-    }
-    
-    .char-indicator {
-        display: inline-block;
-        padding: 8px 15px;
-        margin: 5px;
-        border-radius: 15px;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-    
-    .active {
-        background: #00FF9F;
-        color: #0F2027;
-        box-shadow: 0 0 15px rgba(0, 255, 159, 0.5);
-    }
-    
-    .inactive {
-        background: rgba(44, 83, 100, 0.5);
-        color: #666;
+        border-color: #2E86C1;
+        box-shadow: 0 0 25px rgba(46, 134, 193, 0.2);
+        transform: translateY(-2px);
     }
     
     .requirement-item {
-        padding: 10px;
+        padding: 12px 20px;
         margin: 8px 0;
-        border-radius: 10px;
-        transition: all 0.4s ease;
-        background: rgba(44, 83, 100, 0.5);
+        border-radius: 15px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
-    .requirement-item.met {
-        color: #00FF9F;
-        box-shadow: 0 0 15px rgba(0, 255, 159, 0.4);
+    .requirement-item:hover {
         transform: translateX(5px);
     }
     
+    .requirement-item.met {
+        color: #10B981;
+        background: rgba(16, 185, 129, 0.1);
+        border-left: 4px solid #10B981;
+    }
+    
     .requirement-item.unmet {
-        color: #FF3366;
-        box-shadow: 0 0 15px rgba(255, 51, 102, 0.2);
+        color: #EF4444;
+        background: rgba(239, 68, 68, 0.1);
+        border-left: 4px solid #EF4444;
     }
     
     .strength-meter {
-        padding: 2rem;
+        padding: 30px;
         border-radius: 25px;
-        margin: 1.5rem 0;
-        background: linear-gradient(45deg, rgba(15, 32, 39, 0.9), rgba(44, 83, 100, 0.7));
-        box-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        margin: 25px 0;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .strength-meter:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    }
+    
+    .analysis-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        padding: 30px;
+        border-radius: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        margin-bottom: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .analysis-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
     }
     
     .stProgress > div > div > div > div {
         height: 15px;
         border-radius: 15px;
-        background: linear-gradient(90deg, #FF00FF, #00D4FF);
-        box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        background: linear-gradient(90deg, rgba(46, 134, 193, 0.2), rgba(46, 134, 193, 0.1));
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    @keyframes pulse {
-        0% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
-        50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.4); }
-        100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
+    .stProgress {
+        backdrop-filter: blur(10px);
     }
     
-    .neon-text {
-        animation: neon 1.5s ease-in-out infinite alternate;
+    .stAlert {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(10px);
     }
     
-    @keyframes neon {
-        from { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00D4FF; }
-        to { text-shadow: 0 0 20px #fff, 0 0 30px #FF00FF, 0 0 40px #FF00FF; }
+    .main {
+        background: linear-gradient(135deg, #f6f8fd 0%, #f1f4f9 100%);
+    }
+    
+    .css-1y4p8pa {
+        padding: 3rem 5rem;
+    }
+    
+    .metric-container {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin: 15px 0;
+        transition: all 0.4s ease;
+    }
+    
+    .metric-container:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .password-requirements {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 20px;
+        border-radius: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+    
+    .requirement-list {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    .requirement-list li {
+        padding: 8px 0;
+        color: #666;
+        transition: all 0.3s ease;
+    }
+    
+    .requirement-list li:hover {
+        color: #2E86C1;
+        transform: translateX(5px);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -133,8 +168,14 @@ def calculate_entropy(password):
         'numbers': len(re.findall(r'[0-9]', password)) > 0,
         'symbols': len(re.findall(r'[!@#$%^&*(),.?":{}|<>]', password)) > 0
     }
-    pool_size = sum([26 if char_sets['lowercase'] else 0, 26 if char_sets['uppercase'] else 0,
-                    10 if char_sets['numbers'] else 0, 32 if char_sets['symbols'] else 0])
+    
+    pool_size = sum([
+        26 if char_sets['lowercase'] else 0,
+        26 if char_sets['uppercase'] else 0,
+        10 if char_sets['numbers'] else 0,
+        32 if char_sets['symbols'] else 0
+    ])
+    
     entropy = len(password) * math.log2(pool_size) if pool_size > 0 else 0
     return entropy, char_sets
 
@@ -144,122 +185,166 @@ def analyze_password(password):
     entropy, char_sets = calculate_entropy(password)
     
     requirements = {
-        "Length ≥ 8": len(password) >= 8,
-        "Length ≥ 12": len(password) >= 12,
-        "Uppercase": char_sets['uppercase'],
-        "Lowercase": char_sets['lowercase'],
+        "Length ≥ 8 characters": len(password) >= 8,
+        "Length ≥ 12 characters": len(password) >= 12,
+        "Uppercase letters": char_sets['uppercase'],
+        "Lowercase letters": char_sets['lowercase'],
         "Numbers": char_sets['numbers'],
-        "Symbols": char_sets['symbols']
+        "Special characters": char_sets['symbols']
     }
     
-    score += sum([3 if len(password) >= 12 else 1 if len(password) >= 8 else 0,
-                 2 if char_sets['uppercase'] else 0, 2 if char_sets['lowercase'] else 0,
-                 2 if char_sets['numbers'] else 0, 2 if char_sets['symbols'] else 0])
+    score += sum([
+        2 if len(password) >= 12 else 1 if len(password) >= 8 else 0,
+        1 if char_sets['uppercase'] else 0,
+        1 if char_sets['lowercase'] else 0,
+        1 if char_sets['numbers'] else 0,
+        1 if char_sets['symbols'] else 0
+    ])
     
-    patterns = {r'(.)\1\1': "Repetition Alert", 
-                r'(abc|bcd|...|xyz)': "Sequence Detected",
-                r'(123|234|...|890)': "Numeric Pattern"}
+    patterns = {
+        r'(.)\1\1': "Repeated characters detected",
+        r'(abc|bcd|cde|def|efg|fgh|ghi|hij|ijk|jkl|klm|lmn|mno|nop|opq|pqr|qrs|rst|stu|tuv|uvw|vwx|wxy|xyz)': "Sequential letters detected",
+        r'(123|234|345|456|567|678|789|890)': "Sequential numbers detected"
+    }
     
     for pattern, message in patterns.items():
         if re.search(pattern, password.lower()):
-            score -= 2
+            score -= 1
             feedback.append(f"⚠️ {message}")
     
-    if entropy > 100: score += 3
-    elif entropy > 80: score += 2
-    elif entropy > 60: score += 1
+    if entropy > 80:
+        score += 2
+    elif entropy > 60:
+        score += 1
     
-    score = max(0, min(score, 5))
-    return score, feedback, requirements, entropy, char_sets
+    score = max(0, min(score, 4))
+    
+    return score, feedback, requirements, entropy
 
-# Cyberpunk Header
+# Modern Header with 3D effect
 st.markdown("""
     <div style='text-align: center; padding: 3rem 0;'>
-        <h1 class='neon-text' style='font-family: Orbitron, sans-serif; font-size: 3.5rem;'>
-            🔐 Quantum Password Analyzer
-        </h1>
-        <p style='font-size: 1.2rem; color: #00D4FF; text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);'>
-            Real-Time Security Matrix
-        </p>
+        <h1 style='
+            font-size: 3.5em;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(120deg, #2E86C1, #3498DB, #21618C);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        '>🔐 Password Security Vault</h1>
+        <p style='
+            font-size: 1.4em;
+            color: #666;
+            margin-top: 1rem;
+            font-weight: 400;
+        '>Next-Generation Password Strength Analysis</p>
     </div>
 """, unsafe_allow_html=True)
 
-# Main content
+# Password requirements display
+st.markdown("""
+    <div class='password-requirements'>
+        <h4 style='color: #2E86C1; margin-bottom: 15px;'>Password Requirements:</h4>
+        <ul class='requirement-list'>
+            <li>• Minimum 8 characters (12+ recommended)</li>
+            <li>• At least one uppercase letter (A-Z)</li>
+            <li>• At least one lowercase letter (a-z)</li>
+            <li>• At least one number (0-9)</li>
+            <li>• At least one special character (!@#$%^&*)</li>
+        </ul>
+    </div>
+""", unsafe_allow_html=True)
+
+# Main content with glass morphism
 col1, col2, col3 = st.columns([1, 2, 1])
 
 with col2:
-    password = st.text_input("Enter Encryption Key", type="password", key="password")
-    
-    # Real-Time Character Indicators (Top)
-    if 'password' in st.session_state and st.session_state.password:
-        current_password = st.session_state.password
-        _, _, _, _, char_sets = analyze_password(current_password)
+    password = st.text_input("Enter your password", type="password", key="password")
+
+if 'password' in st.session_state:
+    current_password = st.session_state.password
+    if current_password:
+        score, feedback, requirements, entropy = analyze_password(current_password)
         
-        st.markdown("<div style='text-align: center; margin-bottom: 1rem;'>", unsafe_allow_html=True)
-        for char_type, active in char_sets.items():
-            status = "active" if active else "inactive"
-            st.markdown(f"<span class='char-indicator {status}'>{char_type.capitalize()}</span>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        strength_colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1']
+        strength_labels = ['Critical', 'Weak', 'Moderate', 'Strong', 'Fortress']
+        strength_emojis = ['🚨', '⚠️', '⚡', '💪', '🔐']
         
-        # Real-Time Strength Feedback (Below Input)
-        score, _, _, _, _ = analyze_password(current_password)
-        strength_data = [
-            ("Critical", "#FF3366", "🚨"),
-            ("Low", "#FF6699", "⚠️"),
-            ("Medium", "#FFCC00", "🛡️"),
-            ("High", "#00D4FF", "🔒"),
-            ("Quantum", "#00FF9F", "🌌")
-        ]
         st.markdown(f"""
-            <div class='strength-feedback' style='color: {strength_data[score-1][1]};'>
-                {strength_data[score-1][2]} {strength_data[score-1][0]}
-            </div>
-        """, unsafe_allow_html=True)
-    
-    # Detailed Analysis (Only shows if password exists)
-    if 'password' in st.session_state and st.session_state.password:
-        score, feedback, requirements, entropy, _ = analyze_password(current_password)
-        
-        # Strength Meter
-        st.markdown(f"""
-            <div class='strength-meter' style='border: 2px solid {strength_data[score-1][1]};'>
-                <h2 style='text-align: center; color: {strength_data[score-1][1]}; font-family: Orbitron;'>
-                    {strength_data[score-1][2]} {strength_data[score-1][0]} Security
+            <div class='strength-meter' style='background: linear-gradient(135deg, {strength_colors[score]}15, rgba(255,255,255,0.9));'>
+                <h2 style='
+                    text-align: center;
+                    color: {strength_colors[score]};
+                    margin: 0;
+                    font-size: 2.2em;
+                    font-weight: 600;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+                '>
+                    {strength_emojis[score]} {strength_labels[score]}
                 </h2>
             </div>
         """, unsafe_allow_html=True)
         
         progress_bar = st.progress(0)
-        progress_bar.progress(score * 20)
+        progress_bar.progress((score + 1) * 20)
         
-        # Analysis Dashboard
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("<div class='cyber-container'><h3 style='color: #00D4FF;'>Security Matrix</h3></div>", unsafe_allow_html=True)
+            st.markdown("""
+                <div class='analysis-card'>
+                    <h3 style='color: #2E86C1; margin-bottom: 20px; font-weight: 600;'>
+                        Security Checklist
+                    </h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
             for req, met in requirements.items():
                 status = "met" if met else "unmet"
-                icon = "✅" if met else "❌"
-                st.markdown(f"<div class='requirement-item {status}'>{icon} {req}</div>", unsafe_allow_html=True)
+                icon = "✨" if met else "✖️"
+                st.markdown(f"""
+                    <div class='requirement-item {status}'>
+                        {icon} {req}
+                    </div>
+                """, unsafe_allow_html=True)
             
-            st.metric("🔋 Entropy Matrix", f"{entropy:.1f} bits",
-                     delta="Quantum" if entropy > 80 else "Boost Needed",
-                     delta_color="normal" if entropy > 80 else "inverse")
+            st.markdown("""<div class='metric-container'>""", unsafe_allow_html=True)
+            st.metric("🎯 Security Score", f"{entropy:.1f} bits", 
+                     delta="Elite" if entropy > 60 else "Needs Enhancement")
+            st.markdown("""</div>""", unsafe_allow_html=True)
         
         with col2:
-            st.markdown("<div class='cyber-container'><h3 style='color: #00D4FF;'>System Diagnostics</h3></div>", unsafe_allow_html=True)
+            st.markdown("""
+                <div class='analysis-card'>
+                    <h3 style='color: #2E86C1; margin-bottom: 20px; font-weight: 600;'>
+                        Smart Recommendations
+                    </h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
             if feedback:
                 for suggestion in feedback:
-                    st.markdown(f"<div style='color: #FF3366; padding: 10px;'>{suggestion}</div>", unsafe_allow_html=True)
+                    st.warning(suggestion)
             else:
-                st.markdown("<div style='color: #00FF9F; padding: 10px;'>✅ Optimal Security Configuration!</div>", unsafe_allow_html=True)
+                st.success("🌟 Outstanding! Your password is a security masterpiece!")
             
-            if entropy < 60:
-                st.markdown("<div style='color: #FFCC00; padding: 10px;'>💾 Upgrade Tip: Enhance complexity!</div>", unsafe_allow_html=True)
+            if entropy < 50:
+                st.info("💡 Pro Tip: Create an unbreakable password by combining unique characters")
 
-# Cyber Footer
+# Modern footer with gradient
+st.markdown("---")
 st.markdown("""
-    <div style='text-align: center; padding: 2rem; color: #00D4FF; text-shadow: 0 0 15px rgba(0, 212, 255, 0.5);'>
-        <p>Powered by xAI Quantum Systems | © 2025</p>
+    <div style='text-align: center; padding: 1.5rem;'>
+        <p style='
+            color: #666;
+            font-size: 1.1em;
+            background: linear-gradient(120deg, #2E86C1, #3498DB);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 500;
+        '>
+            Crafted with 🛡️ for next-level security
+        </p>
     </div>
 """, unsafe_allow_html=True)
