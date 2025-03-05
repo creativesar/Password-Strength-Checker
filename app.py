@@ -141,18 +141,17 @@ def main():
             for i in range(0, 101, 10):
                 time.sleep(0.05)
                 progress_placeholder.progress(i/100)
-            
             # Strength indicator with emoji and color
             st.markdown(f"""
                 <h3 style='text-align: center; color: {color}; animation: bounce 1s;'>
                     {strength} {'💪' if strength == 'Strong' else '⚠️' if strength == 'Moderate' else '❌'}
                 </h3>
                 <style>
-                @keyframes bounce {
-                    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-                    40% {transform: translateY(-20px);}
-                    60% {transform: translateY(-10px);}
-                }
+                @keyframes bounce {{
+                    0%, 20%, 50%, 80%, 100% {{transform: translateY(0);}}
+                    40% {{transform: translateY(-20px);}}
+                    60% {{transform: translateY(-10px);}}
+                }}
                 </style>
             """, unsafe_allow_html=True)
 
