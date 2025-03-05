@@ -225,12 +225,12 @@ st.markdown(f"""
 st.markdown("""
     <div class='password-requirements'>
         <h4 style='color: #2E86C1; margin-bottom: 15px;'>Password Requirements:</h4>
-        <ul class='requirement-list'>
-            <li>• Minimum 8 characters (12+ recommended)</li>
-            <li>• At least one uppercase letter (A-Z)</li>
-            <li>• At least one lowercase letter (a-z)</li>
-            <li>• At least one number (0-9)</li>
-            <li>• At least one special character (!@#$%^&*)</li>
+        <ul class='requirement-list' id='reqList'>
+            <li>📏 Minimum 8 characters (12+ recommended)</li>
+            <li>🔠 At least one uppercase letter (A-Z)</li>
+            <li>🔡 At least one lowercase letter (a-z)</li>
+            <li>🔢 At least one number (0-9)</li>
+            <li>💫 At least one special character (!@#$%^&*)</li>
         </ul>
     </div>
 """, unsafe_allow_html=True)
@@ -241,10 +241,29 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     password = st.text_input("Enter your password", type="password", key="password")
 
+# In the requirements checking section, update the icons
 if 'password' in st.session_state:
     current_password = st.session_state.password
     if current_password:
         score, feedback, requirements, entropy = analyze_password(current_password)
+        
+        # Display dynamic requirements with better icons
+        for req, met in requirements.items():
+            icon = "✅" if met else "❌"
+            color = "#10B981" if met else "#EF4444"
+            st.markdown(f"""
+                <div style='
+                    padding: 8px;
+                    margin: 4px 0;
+                    border-radius: 8px;
+                    background-color: {color}15;
+                    display: flex;
+                    align-items: center;
+                '>
+                    <span style='color: {color}; margin-right: 10px; font-size: 1.2em;'>{icon}</span>
+                    {req}
+                </div>
+            """, unsafe_allow_html=True)
         
         strength_colors = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#6366F1']
         strength_labels = ['Critical', 'Weak', 'Moderate', 'Strong', 'Fortress']
