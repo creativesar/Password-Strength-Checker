@@ -1,3 +1,2 @@
 streamlit
-zxcvbn
-plotly
+zxcvbn-python
