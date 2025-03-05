@@ -72,24 +72,55 @@ def check_password_strength(password):
 
 # Streamlit app
 def main():
-    st.title("Password Strength Checker")
-    st.write("Enter a password to check its strength.")
+    st.set_page_config(page_title="Password Strength Checker", page_icon="🔒", layout="centered")
+    st.title("🔒 Password Strength Checker")
+    st.write("Enter a password to check its strength and ensure it meets the requirements.")
 
-    # Input field for password
-    password = st.text_input("Enter your password:", type="password")
+    # Password input with visibility toggle
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        password = st.text_input("Enter your password:", type="password", key="password_input")
+    with col2:
+        show_password = st.checkbox("Show Password")
+
+    if show_password:
+        st.text_input("", value=password, disabled=True, key="visible_password")
+
+    # Display password requirements
+    st.subheader("Password Requirements")
+    requirements = {
+        "Minimum 12 characters": len(password) >= 12,
+        "At least 2 uppercase letters": sum(1 for char in password if char.isupper()) >= 2,
+        "At least 1 lowercase letter": any(char.islower() for char in password),
+        "At least 2 numbers": sum(1 for char in password if char.isdigit()) >= 2,
+        "At least 2 special characters": sum(1 for char in password if not char.isalnum()) >= 2,
+        "No three consecutive identical characters": not any(password[i] == password[i+1] == password[i+2] for i in range(len(password) - 2)),
+        "No common keyboard patterns": not any(pattern.lower() in password.lower() for pattern in ['qwerty', 'asdfgh', '123456', 'zxcvbn']),
+        "Not a common password": password.lower() not in [
+            "password", "123456", "qwerty", "admin", "letmein", "welcome",
+            "monkey", "dragon", "baseball", "football", "master", "hello",
+            "abc123", "123456789", "password1", "superman", "iloveyou"
+        ]
+    }
+
+    for requirement, met in requirements.items():
+        st.markdown(f"- {'✅' if met else '❌'} {requirement}")
 
     if password:
         # Check password strength
         strength, feedback = check_password_strength(password)
 
-        # Display strength
+        # Display strength with a progress bar
         st.subheader("Password Strength:")
         if strength == "Strong":
             st.success("✅ Strong")
+            st.progress(1.0)
         elif strength == "Moderate":
             st.warning("⚠️ Moderate")
+            st.progress(0.66)
         else:
             st.error("❌ Weak")
+            st.progress(0.33)
 
         # Display feedback
         if feedback:
