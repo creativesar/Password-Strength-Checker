@@ -74,7 +74,8 @@ def check_password_strength(password):
 # Streamlit app
 def main():
     st.set_page_config(page_title="Password Strength Checker", page_icon="🔒", layout="centered")
-    st.title("🔒 Password Strength Checker")
+    # Remove this line since we have the animated title below
+    # st.title("🔒 Password Strength Checker")
     st.write("Enter a password to check its strength and ensure it meets the requirements.")
 
     # Custom CSS for modern look
@@ -93,7 +94,7 @@ def main():
         </style>
     """, unsafe_allow_html=True)
 
-    # Animated title
+    # Keep only this animated title
     st.markdown("""
         <h1 style='text-align: center; color: #7e56d9; animation: fadeIn 2s;'>
             🔒 Password Strength Checker
