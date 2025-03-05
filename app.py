@@ -4,74 +4,58 @@ import math
 import time
 from datetime import datetime
 
-# Initialize theme state
+# Remove theme state initialization and theme switcher
 if 'theme' not in st.session_state:
-    st.session_state.theme = 'light'
+    st.session_state.theme = 'cosmic'
 
 # Page configuration
 st.set_page_config(
-    page_title="Next-Gen Password Analyzer",
-    page_icon="🔐",
+    page_title="Cosmic Password Analyzer",
+    page_icon="🌌",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Theme Switcher
-theme = st.sidebar.selectbox(
-    "Choose Theme",
-    ["Light", "Dark"],
-    key="theme_choice",
-    on_change=lambda: setattr(st.session_state, 'theme', st.session_state.theme_choice.lower())
-)
-
-# Enhanced CSS with theme support
+# Enhanced CSS with cosmic theme
 st.markdown("""
 <style>
     /* Base Theme */
     @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
     
-    :root[data-theme="light"] {
-        --bg-color: linear-gradient(135deg, #f6f8fd 0%, #f1f4f9 100%);
-        --text-color: #333;
-        --card-bg: rgba(255, 255, 255, 0.9);
-        --hover-shadow: rgba(0, 0, 0, 0.15);
-    }
-    
-    :root[data-theme="dark"] {
-        --bg-color: linear-gradient(135deg, #1a1c1e 0%, #2d3436 100%);
+    :root {
+        --bg-color: linear-gradient(135deg, #0a192f 0%, #20314e 100%);
         --text-color: #fff;
         --card-bg: rgba(255, 255, 255, 0.05);
-        --hover-shadow: rgba(0, 0, 0, 0.3);
+        --hover-shadow: rgba(147, 197, 253, 0.3);
     }
     
     html, body, [class*="css"] {
         font-family: 'Space Grotesk', sans-serif;
         color: var(--text-color);
         background: var(--bg-color);
-        transition: all 0.3s ease;
     }
     
-    /* Input Styling */
+    /* Cosmic Input Styling */
     .stTextInput > div > div > input {
         font-size: 20px;
         padding: 20px;
         border-radius: 20px;
-        background: var(--card-bg);
-        color: var(--text-color);
-        border: 2px solid rgba(46, 134, 193, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+        border: 2px solid rgba(147, 197, 253, 0.2);
         backdrop-filter: blur(10px);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
-    /* Cards and Containers */
+    /* Cosmic Cards */
     .glass-card {
-        background: var(--card-bg);
+        background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(10px);
         border-radius: 25px;
         padding: 30px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 30px rgba(147, 197, 253, 0.1);
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(147, 197, 253, 0.1);
     }
     
     .glass-card:hover {
@@ -79,64 +63,58 @@ st.markdown("""
         box-shadow: 0 15px 35px var(--hover-shadow);
     }
     
-    /* Animations */
+    /* Stellar Animations */
     @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-10px); }
-        100% { transform: translateY(0px); }
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-10px) rotate(2deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+    
+    @keyframes cosmic-glow {
+        0% { box-shadow: 0 0 10px rgba(147, 197, 253, 0.3); }
+        50% { box-shadow: 0 0 20px rgba(147, 197, 253, 0.5); }
+        100% { box-shadow: 0 0 10px rgba(147, 197, 253, 0.3); }
     }
     
     .floating {
-        animation: float 3s ease-in-out infinite;
+        animation: float 3s ease-in-out infinite, cosmic-glow 2s ease-in-out infinite;
     }
     
-    /* Progress Bar */
+    /* Cosmic Progress Bar */
     .stProgress > div > div > div > div {
         height: 12px;
         border-radius: 10px;
         background: linear-gradient(90deg, 
-            rgba(46, 134, 193, 0.2), 
-            rgba(46, 134, 193, 0.1)
+            rgba(147, 197, 253, 0.2), 
+            rgba(147, 197, 253, 0.1)
         );
     }
     
-    /* Alerts */
+    /* Cosmic Alerts */
     .stAlert {
         border-radius: 20px;
         border: none;
         backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.05) !important;
     }
     
-    /* Requirements List */
+    /* Cosmic Requirements List */
     .requirement-item {
         padding: 12px 20px;
         margin: 8px 0;
         border-radius: 15px;
         transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.05);
     }
     
     .requirement-item.met {
-        background: rgba(16, 185, 129, 0.1);
-        border-left: 4px solid #10B981;
+        background: rgba(147, 197, 253, 0.1);
+        border-left: 4px solid #93C5FD;
     }
     
     .requirement-item.unmet {
         background: rgba(239, 68, 68, 0.1);
         border-left: 4px solid #EF4444;
-    }
-    
-    /* Theme-specific styles */
-    [data-theme="dark"] .stTextInput > div > div > input {
-        background: rgba(255, 255, 255, 0.05);
-        color: #fff;
-    }
-    
-    [data-theme="dark"] .glass-card {
-        background: rgba(255, 255, 255, 0.05);
-    }
-    
-    [data-theme="dark"] .requirement-item {
-        background: rgba(255, 255, 255, 0.05);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -203,20 +181,20 @@ def analyze_password(password):
 
 # Modern Header with theme support
 st.markdown(f"""
-    <div data-theme="{st.session_state.theme}" class="glass-card floating" style='text-align: center; margin-bottom: 2rem;'>
+    <div class="glass-card floating" style='text-align: center; margin-bottom: 2rem;'>
         <h1 style='
             font-size: 3.5em;
             font-weight: 700;
-            background: linear-gradient(120deg, #2E86C1, #3498DB, #21618C);
+            background: linear-gradient(120deg, #93C5FD, #60A5FA, #3B82F6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        '>🔐 Password Security Vault</h1>
+            text-shadow: 0 0 20px rgba(147, 197, 253, 0.5);
+        '>🌌 Cosmic Password Vault</h1>
         <p style='font-size: 1.4em; margin-top: 1rem;'>
-            Next-Generation Password Strength Analysis
+            Intergalactic Password Security Analysis
         </p>
         <div style='margin-top: 1rem; font-size: 1.1em;'>
-            🕒 {datetime.now().strftime("%I:%M %p")}
+            ⭐ {datetime.now().strftime("%I:%M %p")}
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -323,7 +301,7 @@ st.markdown(f"""
             font-weight: 500;
             margin: 0;
         '>
-            Crafted with 🛡️ for next-level security
+            Developed by Sarfraz Ahmad
         </p>
         <div style='margin-top: 10px; font-size: 0.9em;'>
             {datetime.now().strftime("%B %d, %Y")}
